@@ -1,6 +1,6 @@
 // src/App.jsx
 import React, { useContext, useEffect, useState } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { Navbar } from "./components/Navbar";
 import { LandingPage } from "./components/LandingPage";
 import { ShoppingPage } from "./components/ShoppingPage";
@@ -30,8 +30,7 @@ const App = () => {
     setTrendingProducts(sorted);
   }, [products]);
   
-  return (
-    <BrowserRouter>
+  return <>
       <Navbar cartProducts={cartProducts} />
 
       <div className={`w-full min-h-screen flex flex-col ${isLoggedIn ? "md:px-10" : ""} py-2`}>
@@ -44,7 +43,7 @@ const App = () => {
           {isLoggedIn && (
             <>
               <Route path="/library"  element={<LaibraryPage userProducts={userProducts} setCartProducts={setCartProducts} />} />
-              <Route path="/cart" element={<CartPage cartProducts={cartProducts} setCartProducts={setCartProducts} />} />
+              <Route path="/cart" element={<CartPage cartProducts={cartProducts} setUserProducts={setUserProducts} setCartProducts={setCartProducts} />} />
             </>
           )}
 
@@ -62,8 +61,7 @@ const App = () => {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
-    </BrowserRouter>
-  );
+  </>
 };
 
 export default App;

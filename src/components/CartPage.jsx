@@ -2,7 +2,7 @@
 import { Link } from "react-router-dom";
 
 
-export const CartPage = ({cartProducts,setCartProducts}) => {
+export const CartPage = ({cartProducts,setCartProducts,setUserProducts}) => {
 
   const handleQtyAdd = (product) => {
     setCartProducts((items) => {
@@ -22,6 +22,7 @@ export const CartPage = ({cartProducts,setCartProducts}) => {
       }
     });
   };
+
   const handleQtySub = (product) => {
     setCartProducts((items) => {
       return items.map((item) => {
@@ -34,12 +35,23 @@ export const CartPage = ({cartProducts,setCartProducts}) => {
     });
   };
   
-
   const handleRemoveToCart = (id) => {
     setCartProducts((c) => c.filter((item) => item.id !== id));
   };
 
-
+  const handleBuy = ()=>{
+    const products = cartProducts.map(product=>(
+        {
+            id: product.id,
+            title: product.title,
+            downloadDate: `${new Date().getDate()}-${new Date().getMonth()}-${new Date().getFullYear()}`,
+            image: product.image,
+        }
+      )
+    )
+    setUserProducts(products)
+    setCartProducts([])
+  }
 
   const itemsTotal = cartProducts.reduce((sum, item) => sum + item.price * item.qty, 0);
   const grandTotal = itemsTotal ;
@@ -184,7 +196,7 @@ export const CartPage = ({cartProducts,setCartProducts}) => {
               <span>Total cost</span>
               <span>{grandTotal.toFixed(2)} ₹</span>
             </div>
-            <button className="bg-indigo-500 font-semibold hover:bg-indigo-600 py-3 text-sm text-white uppercase w-full">
+            <button onClick={handleBuy} className="bg-indigo-500 font-semibold hover:bg-indigo-600 py-3 text-sm text-white uppercase w-full">
               Checkout
             </button>
           </div>
