@@ -15,6 +15,7 @@ export const CartPage = ({
   const [grandTotal, setGrandTotal] = useState(0);
   const [itemsTotal, setItemsTotal] = useState(0);
   const [appliedPromo, setAppliedPromo] = useState(null);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   
   // Available promo codes with their discount percentages
   const promoCodes = {
@@ -93,43 +94,48 @@ export const CartPage = ({
   }, []);
 
   const getSessionId = async () => {
+    setIsProcessingPayment(true);
     try {
       const response = await api.post("/payment/checkout", {
         amount: grandTotal.toFixed(2),
         user,
       });
       
-      const data = response.data;
-      if (data.payment_session_id) {
-        setOrderID(data.order_id);
-        return data.payment_session_id;
+      if (response.data?.payment_session_id) {
+        setOrderID(response.data.order_id);
+        return response.data.payment_session_id;
       }
-      console.error("Invalid response:", data);
+      
       errorToast("Failed to initialize payment");
+      console.error("Invalid response:", response.data);
     } catch (err) {
-      console.error("Error fetching session ID:", err);
       errorToast("Payment initialization error");
+      console.error("Error fetching session ID:", err);
+    } finally {
+      setIsProcessingPayment(false);
     }
+    return null;
   };
 
   const verifyPayment = async (orderID) => {
+    setIsProcessingPayment(true);
     try {
       const response = await api.post("/payment/verify", { 
         order_id: orderID 
       });
 
-      const data = response.data;
-
-      if (data.success) {
+      if (response.data?.success) {
         successToast("Payment verified successfully!");
         handleBuy();
       } else {
-        console.error("Payment verification failed:", data);
         errorToast("Payment verification failed");
+        console.error("Payment verification failed:", response.data);
       }
     } catch (err) {
-      console.error("Error verifying payment:", err);
       errorToast("Error verifying payment");
+      console.error("Error verifying payment:", err);
+    } finally {
+      setIsProcessingPayment(false);
     }
   };
 
@@ -146,26 +152,29 @@ export const CartPage = ({
       return;
     }
 
+    if (isProcessingPayment) {
+      return; // Prevent multiple payment attempts
+    }
+
     const paymentSessionId = await getSessionId();
     if (!paymentSessionId) return;
 
-    cashfree
-      .checkout({
+    try {
+      const result = await cashfree.checkout({
         paymentSessionId,
         redirectTarget: "_model",
-      })
-      .then((result) => {
-        if (result.error) {
-          console.error("Payment error:", result.error);
-          errorToast("Payment failed");
-        } else {
-          verifyPayment(orderID);
-        }
-      })
-      .catch((err) => {
-        console.error("Checkout failed:", err);
-        errorToast("Checkout failed");
       });
+      
+      if (result.error) {
+        errorToast("Payment failed");
+        console.error("Payment error:", result.error);
+      } else {
+        verifyPayment(orderID);
+      }
+    } catch (err) {
+      errorToast("Checkout failed");
+      console.error("Checkout failed:", err);
+    }
   };
 
   // Payment Setup End
@@ -309,15 +318,15 @@ export const CartPage = ({
               <span>₹{grandTotal.toFixed(2)}</span>
             </div>
             <button
-              disabled={!cashfree || cartProducts.length === 0}
+              disabled={!cashfree || cartProducts.length === 0 || isProcessingPayment}
               onClick={handleCheckout}
               className={`${
-                !cashfree || cartProducts.length === 0 
+                !cashfree || cartProducts.length === 0 || isProcessingPayment
                   ? "bg-gray-400 cursor-not-allowed" 
                   : "bg-indigo-500 hover:bg-indigo-600"
               } font-semibold py-3 text-sm text-white uppercase w-full rounded`}
             >
-              Checkout
+              {isProcessingPayment ? "Processing..." : "Checkout"}
             </button>
           </div>
         </div>

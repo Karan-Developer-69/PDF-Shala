@@ -1,10 +1,16 @@
 import axios from 'axios';
 
+// Get API URL from Vite environment variables
+// For Render deployment, this will use the SERVER_API defined in render.yaml
+// In development, it will fall back to localhost
+const API_URL = import.meta.env.SERVER_API || 'http://localhost:5000';
+
 const api = axios.create({
-  baseURL: import.meta.env.SERVER_API,
+  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 15000, // 15 seconds timeout
 });
 
 // Add request interceptor for handling authentication tokens
@@ -23,7 +29,14 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Handle specific error codes here if needed
+    // Handle authentication errors
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+    }
+    
+    // Log errors in development or for debugging
+    console.error('API Error:', error);
+    
     return Promise.reject(error);
   }
 );
