@@ -25,7 +25,7 @@ router.post('/checkout', async (req, res) => {
         customer_details: {
           customer_id: "CUST_123456789",
           customer_email:user.email,
-          customer_phone: user.mobileNumber || "9876543210",
+          customer_phone: String(user.mobileNumber) || "9876543210",
           customer_name: user.username || "User"
         }
       };
