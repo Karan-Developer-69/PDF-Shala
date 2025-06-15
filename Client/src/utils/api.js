@@ -3,7 +3,7 @@ import axios from 'axios';
 // Get API URL from Vite environment variables
 // For Render deployment, this will use the SERVER_API defined in render.yaml
 // In development, it will fall back to localhost
-export const API_URL = import.meta.env.SERVER_API || 'http://localhost:5000';
+export const API_URL = import.meta.env.SERVER_API || 'https://pdf-shala-api.onrender.com';
 
 const api = axios.create({
   baseURL: API_URL,
